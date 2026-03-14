@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منصة الإنتاج الصناعي</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
+:root {
+  --bg:#060a0f; --card:#0c1219; --card2:#101820; --border:#1a2d3d;
+  --accent:#00c8ff; --green:#00e676; --orange:#ff9100; --red:#ff3d5a;
+  --yellow:#ffe600; --purple:#b44fff; --text:#d0e8f8; --dim:#3a5570;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;min-height:100vh;direction:rtl;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(0,200,255,0.04) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 40% at 85% 100%,rgba(0,230,118,0.03) 0%,transparent 60%);z-index:0;}
+
+/* TABS */
+.tabs-bar{position:sticky;top:0;z-index:100;background:rgba(6,10,15,0.97);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;overflow-x:auto;backdrop-filter:blur(10px);}
+.tab-btn{padding:14px 22px;background:transparent;border:none;border-bottom:3px solid transparent;
+  color:var(--dim);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;
+  transition:all 0.2s;display:flex;align-items:center;gap:8px;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.app-title{margin-right:auto;padding:10px 24px;font-family:'Orbitron',monospace;font-size:15px;
+  font-weight:900;color:var(--accent);letter-spacing:2px;white-space:nowrap;}
+.autosave-ind{padding:8px 14px;font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.autosave-ind .dot{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:all 0.4s;}
+.autosave-ind.saving .dot{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+.autosave-ind.saved .dot{background:var(--green);box-shadow:0 0 6px var(--green);}
+
+/* PAGES */
+.page{display:none;padding:20px;max-width:1400px;margin:0 auto;}
+.page.active{display:block;}
+.sec-title{font-size:18px;font-weight:900;color:var(--accent);display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.sec-title::before{content:'';width:4px;height:22px;background:var(--accent);display:block;}
+
+/* MACHINES GRID */
+.machines-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:1000px){.machines-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.machines-grid{grid-template-columns:1fr;}}
+
+/* MACHINE CARD */
+.mcard{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color 0.3s;}
+.mcard:hover{border-color:rgba(0,200,255,0.3);}
+.mcard.done{border-color:rgba(0,230,118,0.4);}
+.mcard-header{background:rgba(0,200,255,0.05);border-bottom:1px solid var(--border);
+  padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.m-badge{background:rgba(0,200,255,0.12);border:1px solid rgba(0,200,255,0.3);color:var(--accent);
+  font-family:'Orbitron',monospace;font-size:11px;padding:3px 10px;border-radius:3px;white-space:nowrap;}
+.m-name-input{flex:1;background:transparent;border:none;border-bottom:1px dashed var(--border);
+  color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;padding:2px 6px;outline:none;}
+.m-name-input:focus{border-bottom-color:var(--accent);}
+.m-status{width:10px;height:10px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+.m-status.active{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+.m-status.partial{background:var(--orange);box-shadow:0 0 8px var(--orange);}
+
+/* PHOTO PAIR */
+.photo-pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+.photo-slot{background:var(--card);padding:8px;display:flex;flex-direction:column;gap:5px;}
+.photo-slot-label{font-size:11px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:5px;}
+.photo-slot-label.from{color:var(--accent);}
+.photo-slot-label.to{color:var(--orange);}
+.photo-btns{display:flex;gap:4px;}
+.photo-btn{flex:1;padding:5px 0;border:1px dashed var(--border);background:rgba(0,0,0,0.3);
+  color:var(--dim);font-family:'Cairo',sans-serif;font-size:10px;cursor:pointer;
+  border-radius:2px;text-align:center;transition:all 0.2s;}
+.photo-btn:hover{border-color:var(--accent);color:var(--accent);}
+.photo-btn.camera{border-color:rgba(255,145,0,0.2);color:rgba(255,145,0,0.6);}
+.photo-btn.camera:hover{border-color:var(--orange);color:var(--orange);}
+.thumb-box{width:100%;height:72px;background:#040810;border:1px solid var(--border);
+  border-radius:2px;overflow:hidden;position:relative;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.thumb-box img{width:100%;height:100%;object-fit:cover;display:none;}
+.thumb-box.has-img img{display:block;}
+.thumb-box .placeholder{font-size:22px;opacity:0.2;}
+.thumb-box.has-img .placeholder{display:none;}
+.scan-bar{position:absolute;inset:0;pointer-events:none;display:none;
+  background:linear-gradient(to bottom,transparent 40%,rgba(0,200,255,0.15) 50%,transparent 60%);
+  animation:scan-move 1s linear infinite;}
+.thumb-box.scanning .scan-bar{display:block;}
+@keyframes scan-move{0%{transform:translateY(-100%)}100%{transform:translateY(200%)}}
+
+.cnt-tag{font-family:'Share Tech Mono',monospace;font-size:11px;padding:2px 8px;
+  border-radius:2px;text-align:center;border:1px solid var(--border);color:var(--dim);transition:all 0.3s;}
+.cnt-tag.from-tag{border-color:rgba(0,200,255,0.2);color:var(--accent);background:rgba(0,200,255,0.06);}
+.cnt-tag.to-tag{border-color:rgba(255,145,0,0.2);color:var(--orange);background:rgba(255,145,0,0.06);}
+
+/* MANUAL CNT */
+.manual-cnt-wrap{display:flex;align-items:center;gap:4px;}
+.manual-cnt-label{font-size:9px;color:var(--yellow);opacity:0.7;white-space:nowrap;}
+.manual-cnt-input{flex:1;background:rgba(255,230,0,0.04);border:1px dashed rgba(255,230,0,0.25);
+  color:var(--yellow);font-family:'Share Tech Mono',monospace;font-size:12px;
+  padding:3px 6px;border-radius:2px;outline:none;text-align:center;width:100%;}
+.manual-cnt-input:focus{border-color:var(--yellow);background:rgba(255,230,0,0.08);}
+.manual-cnt-input::placeholder{color:rgba(255,230,0,0.2);font-size:9px;}
+
+/* RESULT */
+.mcard-result{padding:10px 14px;display:flex;flex-direction:column;gap:8px;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.r-block{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:3px;padding:6px 10px;}
+.r-label{font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:2px;}
+.r-val{font-family:'Share Tech Mono',monospace;font-size:15px;color:var(--text);}
+.r-val.big{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--green);text-shadow:0 0 12px rgba(0,230,118,0.4);}
+.r-val.accent{color:var(--accent);}
+.r-val.orange{color:var(--orange);}
+.r-val.editable{border-bottom:1px dashed var(--border);background:transparent;outline:none;width:100%;}
+
+.mold-row{display:flex;align-items:center;gap:8px;background:rgba(180,79,255,0.06);
+  border:1px solid rgba(180,79,255,0.2);border-radius:3px;padding:6px 10px;}
+.mold-label{font-size:11px;color:var(--purple);font-weight:700;}
+.mold-code-input{background:transparent;border:none;border-bottom:1px dashed rgba(180,79,255,0.4);
+  color:var(--purple);font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;width:80px;text-align:center;}
+.coeff-label{font-size:11px;color:var(--dim);margin-right:auto;}
+.coeff-input{background:rgba(0,0,0,0.3);border:1px solid rgba(180,79,255,0.3);color:var(--purple);
+  font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;width:55px;text-align:center;padding:2px 6px;border-radius:3px;}
+
+.color-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);}
+.color-swatch{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all 0.3s;}
+.color-name-input{flex:1;background:transparent;border:none;border-bottom:1px dashed var(--border);
+  color:var(--text);font-family:'Cairo',sans-serif;font-size:12px;outline:none;padding:2px;}
+
+.analyze-btn{width:100%;padding:9px;margin-top:2px;background:transparent;border:1px solid var(--accent);
+  color:var(--accent);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;
+  border-radius:3px;transition:all 0.25s;position:relative;overflow:hidden;}
+.analyze-btn::before{content:'';position:absolute;inset:0;background:var(--accent);transform:translateX(100%);transition:transform 0.25s;z-index:0;}
+.analyze-btn:hover{color:var(--bg);}
+.analyze-btn:hover::before{transform:translateX(0);}
+.analyze-btn span{position:relative;z-index:1;}
+.analyze-btn:disabled{opacity:0.25;cursor:not-allowed;}
+.analyze-btn.loading{opacity:0.7;pointer-events:none;animation:border-pulse 0.5s alternate infinite;}
+@keyframes border-pulse{from{opacity:0.4}to{opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* GOALS */
+.goal-card{background:var(--card);border:1px solid rgba(255,230,0,0.2);border-radius:6px;padding:16px;margin-bottom:16px;}
+.goal-title{font-size:16px;font-weight:900;color:var(--yellow);display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.goal-title::before{content:'🎯';}
+.goal-form{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:900px){.goal-form{grid-template-columns:1fr 1fr 1fr;}}
+@media(max-width:600px){.goal-form{grid-template-columns:1fr 1fr;}}
+.gf-group{display:flex;flex-direction:column;gap:4px;}
+.gf-label{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.gf-input{background:rgba(0,0,0,0.3);border:1px solid var(--border);color:var(--text);
+  font-family:'Cairo',sans-serif;font-size:14px;padding:8px 10px;border-radius:3px;outline:none;transition:border-color 0.2s;}
+.gf-input:focus{border-color:var(--yellow);}
+.add-goal-btn{padding:9px 20px;background:transparent;border:1px solid var(--yellow);color:var(--yellow);
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-radius:3px;transition:all 0.2s;}
+.add-goal-btn:hover{background:var(--yellow);color:var(--bg);}
+
+/* Goal search */
+.goals-search{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end;}
+.gsearch-input{background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'Cairo',sans-serif;font-size:13px;padding:8px 12px;border-radius:3px;outline:none;min-width:140px;}
+.gsearch-input:focus{border-color:var(--yellow);}
+.gsearch-btn{padding:9px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-radius:3px;transition:all 0.2s;}
+.gsearch-btn:hover{background:var(--accent);color:var(--bg);}
+.gsearch-btn.clr{border-color:var(--dim);color:var(--dim);}
+.gsearch-btn.clr:hover{border-color:var(--red);color:var(--red);background:transparent;}
+
+/* Goals table */
+.goals-table{width:100%;border-collapse:collapse;font-size:13px;}
+.goals-table th{padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);
+  color:var(--dim);font-size:11px;letter-spacing:1px;font-weight:600;}
+.goals-table td{padding:10px 12px;border-bottom:1px solid rgba(26,45,61,0.5);vertical-align:top;}
+.goals-table tr:last-child td{border-bottom:none;}
+.progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.5s ease;background:var(--green);}
+.progress-fill.warn{background:var(--orange);}
+.progress-fill.pfull{background:var(--accent);}
+.status-pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px;}
+.status-pill.active{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid rgba(0,230,118,0.3);}
+.status-pill.done{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);}
+.status-pill.warn{background:rgba(255,145,0,0.1);color:var(--orange);border:1px solid rgba(255,145,0,0.3);}
+.del-btn{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;}
+.del-btn:hover{color:var(--red);}
+
+/* Session list in goal */
+.goal-sessions{border:1px solid rgba(255,255,255,0.05);border-radius:3px;max-height:120px;overflow-y:auto;}
+.gs-item{display:flex;align-items:center;gap:6px;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;}
+.gs-item:last-child{border-bottom:none;}
+.gs-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.gs-pieces{color:var(--green);font-family:'Share Tech Mono',monospace;font-weight:700;min-width:55px;}
+.gs-time{color:var(--accent);font-family:'Share Tech Mono',monospace;}
+.gs-arrow{color:var(--dim);font-size:9px;}
+.gs-colorname{color:var(--dim);margin-right:auto;font-size:10px;}
+.gs-date{color:var(--dim);font-size:10px;}
+
+.complete-banner{background:linear-gradient(135deg,rgba(0,230,118,0.12),rgba(0,200,255,0.08));
+  border:1px solid rgba(0,230,118,0.4);border-radius:3px;padding:5px 10px;
+  text-align:center;font-size:12px;font-weight:700;color:var(--green);margin-bottom:5px;
+  animation:glow-pulse 2s ease infinite;}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 6px rgba(0,230,118,0.2)}50%{box-shadow:0 0 18px rgba(0,230,118,0.5)}}
+
+/* HISTORY */
+.search-bar{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;margin-bottom:20px;align-items:end;}
+@media(max-width:800px){.search-bar{grid-template-columns:1fr 1fr;}}
+.search-group{display:flex;flex-direction:column;gap:4px;}
+.search-label{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.search-input{background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'Cairo',sans-serif;font-size:13px;padding:9px 12px;border-radius:3px;outline:none;}
+.search-input:focus{border-color:var(--accent);}
+.search-btn{padding:10px 20px;background:var(--accent);border:none;color:var(--bg);
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-radius:3px;}
+.history-table{width:100%;border-collapse:collapse;font-size:13px;}
+.history-table th{padding:10px 14px;text-align:right;background:rgba(0,200,255,0.04);
+  border-bottom:1px solid var(--border);color:var(--accent);font-size:11px;letter-spacing:1px;position:sticky;top:0;z-index:2;}
+.history-table td{padding:10px 14px;border-bottom:1px solid rgba(26,45,61,0.4);}
+.history-table tr:hover td{background:rgba(0,200,255,0.03);}
+.ht-cnt{font-family:'Orbitron',monospace;font-weight:900;color:var(--green);}
+.ht-mold{color:var(--purple);font-family:'Share Tech Mono',monospace;}
+.ht-machine{color:var(--accent);font-weight:700;}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:800px){.stat-grid{grid-template-columns:1fr 1fr;}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;}
+.stat-card.blue::after{background:var(--accent);}
+.stat-card.green::after{background:var(--green);}
+.stat-card.orange::after{background:var(--orange);}
+.stat-card.yellow::after{background:var(--yellow);}
+.stat-label{font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase;}
+.stat-val{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;}
+.stat-val.blue{color:var(--accent);}
+.stat-val.green{color:var(--green);}
+.stat-val.orange{color:var(--orange);}
+.stat-val.yellow{color:var(--yellow);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--card2);border:1px solid var(--border);border-right:3px solid var(--green);
+  padding:12px 24px;z-index:9999;font-size:13px;font-weight:700;color:var(--green);
+  border-radius:4px;opacity:0;transition:all 0.3s;white-space:nowrap;max-width:92vw;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.err{border-right-color:var(--red);color:var(--red);}
+.toast.warn{border-right-color:var(--yellow);color:var(--yellow);}
+
+/* GOAL COMPLETE MODAL */
+.gcmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;
+  display:none;align-items:center;justify-content:center;}
+.gcmodal-overlay.open{display:flex;}
+.gcmodal-box{background:var(--card);border:2px solid var(--green);border-radius:12px;padding:36px;
+  text-align:center;max-width:380px;width:90%;box-shadow:0 0 60px rgba(0,230,118,0.3);
+  animation:pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes pop-in{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.gcmodal-icon{font-size:58px;margin-bottom:12px;display:block;animation:spin-once 0.6s ease;}
+@keyframes spin-once{from{transform:rotate(-20deg) scale(0.5)}to{transform:rotate(0) scale(1)}}
+.gcmodal-title{font-size:24px;font-weight:900;color:var(--green);margin-bottom:8px;}
+.gcmodal-sub{font-size:14px;color:var(--text);margin-bottom:4px;opacity:0.85;}
+.gcmodal-num{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:var(--yellow);margin:10px 0 4px;}
+.gcmodal-color{font-size:13px;color:var(--dim);}
+.gcmodal-close{padding:11px 32px;background:var(--green);border:none;color:var(--bg);
+  font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border-radius:4px;margin-top:18px;}
+
+/* CAMERA MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;
+  width:min(500px,95vw);display:flex;flex-direction:column;gap:12px;}
+.modal-title{font-size:16px;font-weight:900;color:var(--accent);}
+#cameraVideo{width:100%;border-radius:4px;background:#000;max-height:300px;}
+.modal-btns{display:flex;gap:10px;}
+.mbtn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--text);
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border-radius:3px;transition:all 0.2s;}
+.mbtn.confirm{border-color:var(--green);color:var(--green);}
+.mbtn.confirm:hover{background:var(--green);color:var(--bg);}
+.mbtn.cancel{border-color:var(--red);color:var(--red);}
+.mbtn.cancel:hover{background:var(--red);color:#fff;}
+
+@media(max-width:500px){.result-grid{grid-template-columns:1fr;}.goal-form{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="tabs-bar">
+  <span class="app-title">⬡ PROD</span>
+  <button class="tab-btn active" onclick="showTab('machines',event)">🏭 الآلات</button>
+  <button class="tab-btn" onclick="showTab('goals',event)">🎯 الأهداف</button>
+  <button class="tab-btn" onclick="showTab('history',event)">📋 السجل</button>
+  <button class="tab-btn" onclick="showTab('summary',event)">📊 الملخص</button>
+  <div class="autosave-ind" id="asInd"><div class="dot"></div><span id="asTxt">محفوظ</span></div>
+  <div style="display:flex;align-items:center;gap:6px;padding:0 12px;border-right:1px solid var(--border);flex-shrink:0;">
+    <span style="font-size:13px;">🔑</span>
+    <input id="apiKeyInput" type="password" placeholder="sk-ant-..."
+      style="background:rgba(0,0,0,0.5);border:1px solid var(--border);color:var(--yellow);font-family:monospace;font-size:11px;padding:5px 9px;border-radius:3px;outline:none;width:150px;transition:border-color 0.2s;"
+      onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor='var(--border)'"
+      oninput="saveApiKey(this.value)">
+    <span id="apiStatus" style="font-size:14px;" title="أدخل مفتاح API">⚪</span>
+    <button onclick="testApiKey()" style="padding:4px 10px;background:transparent;border:1px solid rgba(0,200,255,0.3);
+      color:var(--accent);font-family:'Cairo',sans-serif;font-size:11px;cursor:pointer;border-radius:3px;white-space:nowrap;"
+      title="اختبار الاتصال بالـ API">🔌 اختبار</button>
+  </div>
+</div>
+
+<!-- MACHINES -->
+<div class="page active" id="page-machines">
+  <div class="sec-title" style="margin-top:16px">إدخال بيانات الآلات — 6 آلات</div>
+  <div class="machines-grid" id="machinesGrid"></div>
+</div>
+
+<!-- GOALS -->
+<div class="page" id="page-goals">
+  <div class="goal-card">
+    <div class="goal-title">إضافة هدف جديد</div>
+    <div class="goal-form">
+      <div class="gf-group"><div class="gf-label">رمز القالب</div><input class="gf-input" id="gMold" placeholder="S.04"></div>
+      <div class="gf-group"><div class="gf-label">اللون المستهدف</div><input class="gf-input" id="gColor" placeholder="أحمر، أبيض..."></div>
+      <div class="gf-group"><div class="gf-label">الهدف (قطع)</div><input class="gf-input" type="number" id="gTarget" placeholder="5000"></div>
+      <div class="gf-group"><div class="gf-label">معامل الضرب</div><input class="gf-input" type="number" id="gCoeff" placeholder="4"></div>
+      <div class="gf-group"><div class="gf-label">ملاحظة</div><input class="gf-input" id="gNote" placeholder="اختياري..."></div>
+    </div>
+    <button class="add-goal-btn" onclick="addGoal()">+ إضافة الهدف</button>
+  </div>
+
+  <div class="goals-search">
+    <div class="gf-group">
+      <div class="gf-label">🔍 بحث بالقالب</div>
+      <input class="gsearch-input" id="gSMold" placeholder="S.04..." oninput="renderGoals()">
+    </div>
+    <div class="gf-group">
+      <div class="gf-label">بحث باللون</div>
+      <input class="gsearch-input" id="gSColor" placeholder="أحمر..." oninput="renderGoals()">
+    </div>
+    <div class="gf-group">
+      <div class="gf-label">الحالة</div>
+      <select class="gsearch-input" id="gSStatus" onchange="renderGoals()">
+        <option value="">الكل</option>
+        <option value="active">نشط</option>
+        <option value="done">مكتمل</option>
+        <option value="warn">بدأ</option>
+      </select>
+    </div>
+    <button class="gsearch-btn clr" onclick="clearGSearch()">✕ مسح</button>
+  </div>
+
+  <div class="sec-title">الأهداف</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:auto;">
+    <table class="goals-table">
+      <thead><tr>
+        <th>القالب / اللون</th><th>معامل</th><th>الهدف</th><th>المنجز</th><th>المتبقي</th>
+        <th>التقدم</th><th>وقت متبقي</th><th>سجل الجلسات (من → إلى)</th><th>الحالة</th><th></th>
+      </tr></thead>
+      <tbody id="goalsTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="search-bar">
+    <div class="search-group">
+      <div class="search-label">رقم الآلة</div>
+      <select class="search-input" id="filterMachine">
+        <option value="">كل الآلات</option>
+        <option>1</option><option>2</option><option>3</option>
+        <option>4</option><option>5</option><option>6</option>
+      </select>
+    </div>
+    <div class="search-group"><div class="search-label">رمز القالب</div><input class="search-input" id="filterMold" placeholder="S.04..."></div>
+    <div class="search-group"><div class="search-label">من تاريخ</div><input class="search-input" type="date" id="filterFrom"></div>
+    <div class="search-group"><div class="search-label">إلى تاريخ</div><input class="search-input" type="date" id="filterTo"></div>
+    <button class="search-btn" onclick="renderHistory()">🔍 بحث</button>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:auto;">
+    <table class="history-table">
+      <thead><tr>
+        <th>#</th><th>الآلة</th><th>القالب</th><th>اللون</th>
+        <th>من</th><th>إلى</th><th>المدة</th><th>CNT فرق</th>
+        <th>معامل</th><th>القطع</th><th>ق/ساعة</th><th>التاريخ</th><th></th>
+      </tr></thead>
+      <tbody id="historyTbody"></tbody>
+    </table>
+  </div>
+  <div style="margin-top:12px;text-align:left;">
+    <button onclick="exportCSV()" style="padding:8px 16px;background:transparent;border:1px solid var(--green);color:var(--green);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;border-radius:3px;">⬇ تصدير CSV</button>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="page" id="page-summary">
+  <div class="stat-grid" id="statGrid"></div>
+  <div class="sec-title">أداء كل آلة اليوم</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:auto;">
+    <table class="history-table">
+      <thead><tr><th>الآلة</th><th>جلسات اليوم</th><th>إجمالي القطع</th><th>متوسط ق/ساعة</th><th>القالب الأكثر</th></tr></thead>
+      <tbody id="summaryTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal-overlay" id="cameraModal">
+  <div class="modal-box">
+    <div class="modal-title">📷 التقاط صورة</div>
+    <video id="cameraVideo" autoplay playsinline></video>
+    <canvas id="cameraCanvas" style="display:none"></canvas>
+    <div class="modal-btns">
+      <button class="mbtn confirm" onclick="capturePhoto()">📸 التقاط</button>
+      <button class="mbtn cancel" onclick="closeCamera()">✕ إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal Complete Modal -->
+<div class="gcmodal-overlay" id="gcModal">
+  <div class="gcmodal-box">
+    <span class="gcmodal-icon">🎉</span>
+    <div class="gcmodal-title">اكتمل الهدف!</div>
+    <div class="gcmodal-sub" id="gcSub">تم إنجاز هدف القالب</div>
+    <div class="gcmodal-num" id="gcNum">—</div>
+    <div class="gcmodal-color" id="gcColor"></div>
+    <button class="gcmodal-close" onclick="document.getElementById('gcModal').classList.remove('open')">✓ رائع!</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+const NUM = 6;
+let prodHistory = JSON.parse(localStorage.getItem('prodHistory')||'[]');
+let goals       = JSON.parse(localStorage.getItem('prodGoals')||'[]');
+let coeffMap    = JSON.parse(localStorage.getItem('coeffMap')||'{}');
+let asTimer     = null;
+
+const machines  = Array.from({length:NUM},(_,i)=>({
+  id:i+1, name:`آلة ${i+1}`,
+  from:{b64:null,cnt:null,time:null},
+  to:  {b64:null,cnt:null,time:null},
+  mold:'',coeff:1,color:'',colorHex:'#aaaaaa',
+  diff:null,pieces:null,pph:null,analyzed:false
+}));
+
+// ===== TEST API =====
+async function testApiKey(){
+  const key = getApiKey();
+  if(!key){ toast('أدخل مفتاح API أولاً',true); return; }
+  toast('⟳ جارٍ اختبار الاتصال...','info');
+  
+  const strategies = [
+    {name:'مباشر', url:'https://api.anthropic.com/v1/messages', 
+     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'}},
+    {name:'corsproxy.io', url:'https://corsproxy.io/?'+encodeURIComponent('https://api.anthropic.com/v1/messages'),
+     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'}},
+    {name:'cors-anywhere', url:'https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages',
+     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','X-Requested-With':'XMLHttpRequest'}},
+    {name:'thingproxy', url:'https://thingproxy.freeboard.io/fetch/https://api.anthropic.com/v1/messages',
+     headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'}}
+  ];
+
+  const testBody = JSON.stringify({
+    model:'claude-haiku-4-5-20251001', max_tokens:10,
+    messages:[{role:'user',content:'reply OK'}]
+  });
+
+  for(const s of strategies){
+    try{
+      const r = await fetch(s.url,{method:'POST',headers:s.headers,body:testBody});
+      const data = await r.json();
+      if(data.content||data.id){
+        toast(`✅ يعمل عبر: ${s.name}`);
+        document.getElementById('apiStatus').textContent='🟢';
+        return;
+      } else if(data.error){
+        if(data.error.type==='authentication_error'){
+          toast('❌ مفتاح API غير صحيح',true);
+          document.getElementById('apiStatus').textContent='🔴';
+          return;
+        }
+      }
+    }catch(e){
+      console.warn(s.name+' failed:', e.message);
+    }
+  }
+  toast('❌ لا يمكن الاتصال — تحقق من الإنترنت أو المفتاح',true);
+}
+
+// ===== AUTO SAVE =====
+function triggerAutoSave(){
+  const ind=document.getElementById('asInd'),txt=document.getElementById('asTxt');
+  ind.className='autosave-ind saving'; txt.textContent='جارٍ الحفظ...';
+  clearTimeout(asTimer);
+  asTimer=setTimeout(()=>{
+    localStorage.setItem('prodHistory',JSON.stringify(prodHistory));
+    localStorage.setItem('prodGoals',JSON.stringify(goals));
+    localStorage.setItem('coeffMap',JSON.stringify(coeffMap));
+    ind.className='autosave-ind saved'; txt.textContent='محفوظ تلقائياً ✓';
+    setTimeout(()=>{ ind.className='autosave-ind'; txt.textContent='محفوظ'; },2500);
+  },800);
+}
+
+// ===== TABS =====
+function showTab(name,evt){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(evt&&evt.currentTarget) evt.currentTarget.classList.add('active');
+  if(name==='history') renderHistory();
+  if(name==='summary') renderSummary();
+  if(name==='goals')   renderGoals();
+}
+
+// ===== BUILD MACHINES =====
+function buildMachines(){
+  const grid=document.getElementById('machinesGrid');
+  grid.innerHTML='';
+  machines.forEach((_,i)=>grid.appendChild(buildCard(i)));
+}
+
+function buildCard(i){
+  const m=machines[i];
+  const div=document.createElement('div');
+  div.className='mcard'+(m.analyzed?' done':'');
+  div.id='card-'+i;
+  div.innerHTML=`
+  <div class="mcard-header">
+    <div class="m-badge">M${m.id}</div>
+    <input class="m-name-input" value="${m.name}" placeholder="اسم الآلة..."
+      oninput="machines[${i}].name=this.value;triggerAutoSave()">
+    <div class="m-status ${m.analyzed?'active':''}" id="mstatus-${i}"></div>
+  </div>
+  <div class="photo-pair">
+    <div class="photo-slot">
+      <div class="photo-slot-label from">📥 بداية</div>
+      <div class="photo-btns">
+        <button class="photo-btn" onclick="openGallery(${i},'from')">🖼 معرض</button>
+        <button class="photo-btn camera" onclick="openCamera(${i},'from')">📷</button>
+      </div>
+      <div class="thumb-box ${m.from.b64?'has-img':''}" id="from-box-${i}" onclick="openGallery(${i},'from')">
+        <img id="from-img-${i}" src="${m.from.b64?'data:image/jpeg;base64,'+m.from.b64:''}" alt="">
+        <div class="placeholder">📥</div><div class="scan-bar"></div>
+      </div>
+      <input type="file" accept="image/*" id="from-file-${i}" style="display:none" onchange="handleFile(event,${i},'from')">
+      <div class="cnt-tag from-tag" id="from-cnt-${i}">${m.from.cnt!==null?'CNT: '+m.from.cnt:'—'}</div>
+      <div class="manual-cnt-wrap">
+        <span class="manual-cnt-label">✎</span>
+        <input class="manual-cnt-input" id="mcnt-from-${i}" type="number" min="0"
+          placeholder="إدخال يدوي..."
+          value="${m.from.cnt!==null?m.from.cnt:''}"
+          oninput="setManualCnt(${i},'from',this.value)">
+      </div>
+      <div class="cnt-tag" id="from-time-${i}" style="font-size:10px;border:none;color:var(--dim)">${m.from.time||'—'}</div>
+    </div>
+    <div class="photo-slot">
+      <div class="photo-slot-label to">📤 نهاية</div>
+      <div class="photo-btns">
+        <button class="photo-btn" onclick="openGallery(${i},'to')">🖼 معرض</button>
+        <button class="photo-btn camera" onclick="openCamera(${i},'to')">📷</button>
+      </div>
+      <div class="thumb-box ${m.to.b64?'has-img':''}" id="to-box-${i}" onclick="openGallery(${i},'to')">
+        <img id="to-img-${i}" src="${m.to.b64?'data:image/jpeg;base64,'+m.to.b64:''}" alt="">
+        <div class="placeholder">📤</div><div class="scan-bar"></div>
+      </div>
+      <input type="file" accept="image/*" id="to-file-${i}" style="display:none" onchange="handleFile(event,${i},'to')">
+      <div class="cnt-tag to-tag" id="to-cnt-${i}">${m.to.cnt!==null?'CNT: '+m.to.cnt:'—'}</div>
+      <div class="manual-cnt-wrap">
+        <span class="manual-cnt-label">✎</span>
+        <input class="manual-cnt-input" id="mcnt-to-${i}" type="number" min="0"
+          placeholder="إدخال يدوي..."
+          value="${m.to.cnt!==null?m.to.cnt:''}"
+          oninput="setManualCnt(${i},'to',this.value)">
+      </div>
+      <div class="cnt-tag" id="to-time-${i}" style="font-size:10px;border:none;color:var(--dim)">${m.to.time||'—'}</div>
+    </div>
+  </div>
+  <div class="mcard-result">
+    <div class="mold-row">
+      <div class="mold-label">القالب:</div>
+      <input class="mold-code-input" id="mold-${i}" value="${m.mold}" placeholder="S.04"
+        oninput="onMoldChange(${i},this.value)">
+      <div class="coeff-label">× المعامل:</div>
+      <input class="coeff-input" id="coeff-${i}" type="number" value="${m.coeff}" min="1"
+        oninput="machines[${i}].coeff=parseFloat(this.value)||1;recalc(${i});triggerAutoSave()">
+    </div>
+    <div class="color-row">
+      <span>🎨</span>
+      <input type="color" id="cpick-${i}" value="${m.colorHex}"
+        oninput="machines[${i}].colorHex=this.value;document.getElementById('cswatch-${i}').style.background=this.value;triggerAutoSave()">
+      <div class="color-swatch" id="cswatch-${i}" style="background:${m.colorHex}"></div>
+      <input class="color-name-input" id="cname-${i}" value="${m.color}" placeholder="اسم اللون..."
+        oninput="machines[${i}].color=this.value;triggerAutoSave()">
+    </div>
+    <div class="result-grid">
+      <div class="r-block" style="grid-column:1/-1">
+        <div class="r-label">القطع المنتجة (CNT فرق × معامل)</div>
+        <div class="r-val big" id="pieces-${i}">${m.pieces!==null?m.pieces.toLocaleString('ar-DZ'):'—'}</div>
+      </div>
+      <div class="r-block">
+        <div class="r-label">من الوقت</div>
+        <input class="r-val accent editable" id="rft-${i}" value="${m.from.time||''}" placeholder="09:26"
+          oninput="machines[${i}].from.time=this.value;recalcPPH(${i});triggerAutoSave()">
+      </div>
+      <div class="r-block">
+        <div class="r-label">إلى الوقت</div>
+        <input class="r-val orange editable" id="rtt-${i}" value="${m.to.time||''}" placeholder="17:30"
+          oninput="machines[${i}].to.time=this.value;recalcPPH(${i});triggerAutoSave()">
+      </div>
+      <div class="r-block">
+        <div class="r-label">المدة</div>
+        <div class="r-val" id="dur-${i}">—</div>
+      </div>
+      <div class="r-block">
+        <div class="r-label">قطعة/ساعة</div>
+        <div class="r-val" style="color:var(--yellow)" id="pph-${i}">${m.pph!==null?m.pph:'—'}</div>
+      </div>
+    </div>
+    <button class="analyze-btn" id="btn-${i}" onclick="analyzeCard(${i})" ${!m.from.b64&&!m.to.b64?'disabled':''}>
+      <span id="btxt-${i}">▶ تحليل الآلة ${m.id}</span>
+    </button>
+    <button class="analyze-btn" onclick="saveSession(${i})" style="border-color:var(--green);color:var(--green);margin-top:4px;">
+      <span>💾 حفظ في السجل</span>
+    </button>
+  </div>`;
+  return div;
+}
+
+// ===== MANUAL CNT =====
+function setManualCnt(i,type,val){
+  const n=parseInt(val);
+  if(!isNaN(n)&&n>=0){
+    machines[i][type].cnt=n;
+    document.getElementById(`${type}-cnt-${i}`).textContent='CNT: '+n+' ✎';
+    document.getElementById(`btn-${i}`).disabled=false;
+    recalc(i); triggerAutoSave();
+  } else if(val===''){
+    machines[i][type].cnt=null;
+    document.getElementById(`${type}-cnt-${i}`).textContent='—';
+    recalc(i);
+  }
+}
+
+// ===== FILE =====
+function openGallery(i,type){ document.getElementById(`${type}-file-${i}`).click(); }
+function handleFile(evt,i,type){
+  const file=evt.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    machines[i][type].b64=e.target.result.split(',')[1];
+    document.getElementById(`${type}-img-${i}`).src=e.target.result;
+    document.getElementById(`${type}-box-${i}`).classList.add('has-img');
+    document.getElementById(`btn-${i}`).disabled=false;
+    toast(`M${i+1} — صورة ${type==='from'?'البداية':'النهاية'} محملة`);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== CAMERA =====
+let camStream=null,camTarget=null;
+async function openCamera(i,type){
+  camTarget={i,type};
+  document.getElementById('cameraModal').classList.add('open');
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    document.getElementById('cameraVideo').srcObject=camStream;
+  }catch(e){ toast('لا يمكن الوصول للكاميرا',true); closeCamera(); }
+}
+function capturePhoto(){
+  const v=document.getElementById('cameraVideo'),c=document.getElementById('cameraCanvas');
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0);
+  const url=c.toDataURL('image/jpeg',0.85);
+  const{i,type}=camTarget;
+  machines[i][type].b64=url.split(',')[1];
+  document.getElementById(`${type}-img-${i}`).src=url;
+  document.getElementById(`${type}-box-${i}`).classList.add('has-img');
+  document.getElementById(`btn-${i}`).disabled=false;
+  closeCamera(); toast(`M${i+1} — صورة ملتقطة`);
+}
+function closeCamera(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  document.getElementById('cameraModal').classList.remove('open');
+}
+
+// ===== OCR =====
+function saveApiKey(val){
+  val=val.trim();localStorage.setItem('anthropicKey',val);
+  const st=document.getElementById('apiStatus');
+  if(val.startsWith('sk-ant-')&&val.length>20){st.textContent='🟢';st.title='مفتاح صالح';}
+  else if(val.length>0){st.textContent='🟡';st.title='تحقق من المفتاح';}
+  else{st.textContent='⚪';st.title='أدخل المفتاح';}
+}
+function getApiKey(){
+  return (document.getElementById('apiKeyInput')?.value||'').trim()||localStorage.getItem('anthropicKey')||'';
+}
+async function callOCR(b64){
+  const apiKey = getApiKey();
+  if(!apiKey) throw new Error('no key');
+
+  const prompt = `أنت نظام OCR صناعي دقيق. حلل شاشة الآلة الصناعية في هذه الصورة.
+أجب فقط بـ JSON صالح بدون أي نص أو backticks:
+{"cnt":5915,"time":"07:50","mold_code":"S.04","color":"أبيض","color_hex":"#ffffff"}
+- cnt: الرقم الكبير في خانة CNT (رقم صحيح فقط)
+- time: الوقت بصيغة HH:MM
+- mold_code: رمز القالب في الشاشة
+- color: لون المنتج (اسم عربي دقيق)
+- color_hex: كود hex دقيق للون (أبيض=#ffffff، أسود=#111111، أحمر=#cc2222، أزرق=#1155cc، أخضر=#22aa44، أصفر=#ddcc00، رمادي=#888888، بيج=#d4b896، بني=#7a4f2d، برتقالي=#e87820)
+إذا لم تجد قيمة اكتب null.`;
+
+  const payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 400,
+    messages: [{
+      role: 'user',
+      content: [
+        {type:'image', source:{type:'base64', media_type:'image/jpeg', data:b64}},
+        {type:'text', text:prompt}
+      ]
+    }]
+  };
+
+  // List of strategies to try in order
+  const strategies = [
+    // 1. Direct call with Anthropic's browser access header
+    async () => {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!r.ok) throw new Error('direct_' + r.status);
+      return r.json();
+    },
+    // 2. corsproxy.io
+    async () => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!r.ok) throw new Error('corsproxy_' + r.status);
+      return r.json();
+    },
+    // 3. cors-anywhere (herokuapp)
+    async () => {
+      const r = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!r.ok) throw new Error('herokuapp_' + r.status);
+      return r.json();
+    },
+    // 4. thingproxy
+    async () => {
+      const r = await fetch('https://thingproxy.freeboard.io/fetch/https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!r.ok) throw new Error('thingproxy_' + r.status);
+      return r.json();
+    }
+  ];
+
+  let lastErr = null;
+  for(let i = 0; i < strategies.length; i++){
+    try {
+      console.log(`OCR: trying strategy ${i+1}/${strategies.length}...`);
+      const data = await strategies[i]();
+      if(data.error) throw new Error(JSON.stringify(data.error));
+      const raw = data.content?.map(x=>x.text||'').join('') || '{}';
+      const result = JSON.parse(raw.replace(/```json|```/g,'').trim());
+      console.log(`OCR: success with strategy ${i+1}`, result);
+      return result;
+    } catch(e) {
+      console.warn(`OCR strategy ${i+1} failed:`, e.message);
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('كل الطرق فشلت');
+}
+
+
+// ===== ANALYZE =====
+async function analyzeCard(i){
+  if(!getApiKey()){toast('❌ أدخل مفتاح API في الحقل 🔑 أعلى الصفحة',true);return;}
+  const m=machines[i];
+  const btn=document.getElementById(`btn-${i}`),btxt=document.getElementById(`btxt-${i}`);
+  btn.classList.add('loading'); btn.disabled=true; btxt.textContent='⟳ جارٍ التحليل...';
+  const types=[]; if(m.from.b64) types.push('from'); if(m.to.b64) types.push('to');
+  let moldDet=null,colorDet=null,colorHexDet=null;
+
+  for(const type of types){
+    const box=document.getElementById(`${type}-box-${i}`); box.classList.add('scanning');
+    const cntTag=document.getElementById(`${type}-cnt-${i}`);
+    const hadManual=machines[i][type].cnt!==null;
+    if(!hadManual) cntTag.textContent='...';
+    try{
+      const r=await callOCR(m[type].b64);
+      if(!hadManual&&r.cnt!==null){
+        m[type].cnt=r.cnt;
+        cntTag.textContent='CNT: '+r.cnt;
+        document.getElementById(`mcnt-${type}-${i}`).value=r.cnt;
+      } else if(hadManual){
+        cntTag.textContent='CNT: '+m[type].cnt+' ✎';
+      } else {
+        cntTag.textContent='⚠ لم يُعثر — أدخل يدوياً';
+      }
+      if(r.time){ m[type].time=r.time; document.getElementById(`${type}-time-${i}`).textContent=r.time; }
+      if(r.mold_code&&!moldDet) moldDet=r.mold_code;
+      if(r.color&&!colorDet){ colorDet=r.color; colorHexDet=r.color_hex; }
+    }catch(e){
+      console.error('OCR error:', e);
+      if(!hadManual) cntTag.textContent='⚠ خطأ — أدخل يدوياً';
+      if(e.message==='no key') toast('❌ أدخل مفتاح API أولاً',true);
+    }
+    box.classList.remove('scanning');
+  }
+
+  if(moldDet&&!m.mold){
+    m.mold=moldDet; document.getElementById(`mold-${i}`).value=moldDet;
+    if(coeffMap[moldDet]){ m.coeff=coeffMap[moldDet]; document.getElementById(`coeff-${i}`).value=m.coeff; }
+  }
+  if(colorDet&&!m.color){
+    m.color=colorDet; m.colorHex=colorHexDet||'#aaaaaa';
+    document.getElementById(`cname-${i}`).value=colorDet;
+    document.getElementById(`cpick-${i}`).value=m.colorHex;
+    document.getElementById(`cswatch-${i}`).style.background=m.colorHex;
+  }
+  if(m.from.time){ document.getElementById(`rft-${i}`).value=m.from.time; }
+  if(m.to.time)  { document.getElementById(`rtt-${i}`).value=m.to.time; }
+
+  recalc(i);
+  m.analyzed=true;
+  document.getElementById(`mstatus-${i}`).className='m-status active';
+  document.getElementById(`card-${i}`).classList.add('done');
+  btn.classList.remove('loading'); btn.disabled=false; btxt.textContent='↺ إعادة تحليل';
+  toast(`آلة ${m.id} — ${m.pieces!==null?m.pieces.toLocaleString('ar-DZ')+' قطعة':'تحليل مكتمل'}`);
+  triggerAutoSave();
+}
+
+function onMoldChange(i,val){
+  machines[i].mold=val;
+  if(coeffMap[val]){ machines[i].coeff=coeffMap[val]; document.getElementById(`coeff-${i}`).value=machines[i].coeff; recalc(i); }
+  const c=parseFloat(document.getElementById(`coeff-${i}`).value)||1;
+  if(val){ coeffMap[val]=c; triggerAutoSave(); }
+}
+
+function recalc(i){
+  const m=machines[i];
+  if(m.from.cnt!==null&&m.to.cnt!==null){
+    m.diff=Math.abs(m.to.cnt-m.from.cnt);
+    m.pieces=Math.round(m.diff*m.coeff);
+    document.getElementById(`pieces-${i}`).textContent=m.pieces.toLocaleString('ar-DZ');
+    if(m.mold) coeffMap[m.mold]=m.coeff;
+    m.analyzed=true;
+    document.getElementById(`mstatus-${i}`).className='m-status active';
+    document.getElementById(`card-${i}`).classList.add('done');
+  }
+  recalcPPH(i);
+}
+
+function recalcPPH(i){
+  const m=machines[i];
+  const ft=document.getElementById(`rft-${i}`)?.value||m.from.time;
+  const tt=document.getElementById(`rtt-${i}`)?.value||m.to.time;
+  if(ft&&tt&&m.pieces!==null){
+    const dur=timeDiff(ft,tt);
+    document.getElementById(`dur-${i}`).textContent=dur?dur.toFixed(2)+'h':'—';
+    if(dur&&dur>0){ m.pph=Math.round(m.pieces/dur); document.getElementById(`pph-${i}`).textContent=m.pph.toLocaleString('ar-DZ'); }
+  }
+}
+
+function timeDiff(a,b){
+  const[ah,am]=(a||'').split(':').map(Number);
+  const[bh,bm]=(b||'').split(':').map(Number);
+  if(isNaN(ah)||isNaN(bh)) return null;
+  let d=(bh*60+bm)-(ah*60+am); if(d<0) d+=1440; return d/60;
+}
+
+// ===== SAVE =====
+function saveSession(i){
+  const m=machines[i];
+  if(m.pieces===null){ toast('أدخل قيم CNT أولاً',true); return; }
+  const e={
+    id:Date.now(), machine:m.id, machineName:m.name,
+    mold:m.mold, coeff:m.coeff, color:m.color, colorHex:m.colorHex,
+    cntFrom:m.from.cnt, cntTo:m.to.cnt, diff:m.diff, pieces:m.pieces,
+    timeFrom:m.from.time, timeTo:m.to.time, pph:m.pph,
+    date:new Date().toISOString().split('T')[0],
+    savedAt:new Date().toLocaleTimeString('ar-DZ')
+  };
+  prodHistory.unshift(e);
+  updateGoals(m.mold,m.color,m.colorHex,m.pieces,m.pph,m.from.time,m.to.time);
+  triggerAutoSave();
+  toast('تم حفظ الجلسة ✓');
+}
+
+// ===== GOALS =====
+function addGoal(){
+  const mold=document.getElementById('gMold').value.trim();
+  const color=document.getElementById('gColor').value.trim();
+  const target=parseInt(document.getElementById('gTarget').value);
+  const coeff=parseFloat(document.getElementById('gCoeff').value)||1;
+  const note=document.getElementById('gNote').value;
+  if(!mold||!target){ toast('أدخل رمز القالب والهدف',true); return; }
+  goals.push({id:Date.now(),mold,color,target,coeff,note,done:0,sessions:[],createdAt:new Date().toISOString()});
+  if(!coeffMap[mold]) coeffMap[mold]=coeff;
+  triggerAutoSave(); renderGoals();
+  ['gMold','gColor','gTarget','gCoeff','gNote'].forEach(id=>document.getElementById(id).value='');
+  toast('تم إضافة الهدف');
+}
+
+function updateGoals(mold,color,colorHex,pieces,pph,timeFrom,timeTo){
+  if(!mold||!pieces) return;
+  goals.forEach(g=>{
+    const moldOk=g.mold===mold;
+    const colorOk=!g.color||!color||g.color.toLowerCase()===color.toLowerCase();
+    if(moldOk&&colorOk&&g.done<g.target){
+      g.done+=pieces;
+      g.sessions.push({pieces,pph,color,colorHex,timeFrom,timeTo,at:new Date().toISOString()});
+      if(g.done>=g.target) showGoalComplete(g);
+    }
+  });
+  triggerAutoSave();
+}
+
+function showGoalComplete(g){
+  document.getElementById('gcSub').textContent=`تم إنجاز هدف القالب: ${g.mold}`;
+  document.getElementById('gcNum').textContent=g.done.toLocaleString('ar-DZ')+' قطعة';
+  document.getElementById('gcColor').textContent=g.color?`اللون: ${g.color}`:'';
+  document.getElementById('gcModal').classList.add('open');
+}
+
+function deleteGoal(id){ goals=goals.filter(g=>g.id!==id); triggerAutoSave(); renderGoals(); }
+
+function clearGSearch(){
+  ['gSMold','gSColor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('gSStatus').value='';
+  renderGoals();
+}
+
+function renderGoals(){
+  const tbody=document.getElementById('goalsTbody'); if(!tbody) return;
+  const sm=(document.getElementById('gSMold')?.value||'').toLowerCase();
+  const sc=(document.getElementById('gSColor')?.value||'').toLowerCase();
+  const ss=document.getElementById('gSStatus')?.value||'';
+
+  let list=goals.filter(g=>{
+    if(sm&&!g.mold.toLowerCase().includes(sm)) return false;
+    if(sc&&!(g.color||'').toLowerCase().includes(sc)) return false;
+    if(ss){
+      const p=Math.min(100,Math.round(g.done/g.target*100));
+      const st=g.done>=g.target?'done':p>70?'active':'warn';
+      if(st!==ss) return false;
+    }
+    return true;
+  });
+
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--dim)">لا توجد أهداف</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=list.map(g=>{
+    const pct=Math.min(100,Math.round(g.done/g.target*100));
+    const rem=Math.max(0,g.target-g.done);
+    const pphS=g.sessions.filter(x=>x.pph);
+    const avgPPH=pphS.length?pphS.reduce((s,x)=>s+x.pph,0)/pphS.length:null;
+    const tRem=avgPPH&&rem?(rem/avgPPH).toFixed(1)+'h':'—';
+    const status=g.done>=g.target?'done':pct>70?'active':'warn';
+    const slabel=g.done>=g.target?'✓ مكتمل':pct>70?'نشط':'بدأ';
+
+    const sesHTML=g.sessions.length
+      ? g.sessions.slice(-6).reverse().map(s=>`
+        <div class="gs-item">
+          <div class="gs-dot" style="background:${s.colorHex||'#555'}"></div>
+          <span class="gs-pieces">+${(s.pieces||0).toLocaleString('ar-DZ')}</span>
+          ${s.timeFrom?`<span class="gs-time">${s.timeFrom}</span><span class="gs-arrow">→</span><span class="gs-time" style="color:var(--orange)">${s.timeTo||'؟'}</span>`:''}
+          <span class="gs-colorname">${s.color||''}</span>
+          <span class="gs-date">${(s.at||'').slice(0,10)}</span>
+        </div>`).join('')
+      : '<div style="padding:5px 8px;color:var(--dim);font-size:11px">لا توجد جلسات بعد</div>';
+
+    const total=g.sessions.reduce((s,x)=>s+(x.pieces||0),0);
+
+    return `<tr ${g.done>=g.target?'style="background:rgba(0,230,118,0.03)"':''}>
+      <td>
+        <div style="font-family:\'Share Tech Mono\',monospace;color:var(--purple);font-size:13px">${g.mold}</div>
+        ${g.color?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px;font-size:11px;color:var(--dim)">
+          <span style="width:9px;height:9px;border-radius:50%;background:${g.colorHex||'#aaa'};display:inline-block;border:1px solid rgba(255,255,255,0.1)"></span>${g.color}
+        </div>`:'<div style="font-size:10px;color:var(--dim);margin-top:2px">كل الألوان</div>'}
+        ${g.note?`<div style="font-size:10px;color:var(--dim);margin-top:2px">${g.note}</div>`:''}
+      </td>
+      <td style="color:var(--purple)">${g.coeff}×</td>
+      <td>${g.target.toLocaleString('ar-DZ')}</td>
+      <td style="color:var(--green)">${g.done.toLocaleString('ar-DZ')}</td>
+      <td style="color:var(--orange)">${rem.toLocaleString('ar-DZ')}</td>
+      <td style="min-width:130px">
+        ${g.done>=g.target?'<div class="complete-banner">🎉 اكتمل الهدف!</div>':''}
+        <div style="font-size:11px;color:var(--dim);margin-bottom:3px">${pct}%</div>
+        <div class="progress-bar"><div class="progress-fill ${pct>=100?'pfull':pct>60?'':'warn'}" style="width:${pct}%"></div></div>
+        <div style="font-size:10px;color:var(--dim);margin-top:3px">${g.sessions.length} جلسة</div>
+      </td>
+      <td style="color:var(--yellow)">${tRem}</td>
+      <td style="min-width:220px">
+        <div class="goal-sessions">${sesHTML}</div>
+        <div style="font-size:10px;color:var(--dim);text-align:left;margin-top:3px">
+          المجموع: <span style="color:var(--green);font-family:'Share Tech Mono',monospace">${total.toLocaleString('ar-DZ')}</span>
+        </div>
+      </td>
+      <td><span class="status-pill ${status}">${slabel}</span></td>
+      <td><button class="del-btn" onclick="deleteGoal(${g.id})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== HISTORY =====
+function renderHistory(){
+  const tbody=document.getElementById('historyTbody');
+  let data=[...prodHistory];
+  const fm=document.getElementById('filterMachine')?.value;
+  const fmold=document.getElementById('filterMold')?.value?.toLowerCase();
+  const ffrom=document.getElementById('filterFrom')?.value;
+  const fto=document.getElementById('filterTo')?.value;
+  if(fm) data=data.filter(r=>String(r.machine)===fm);
+  if(fmold) data=data.filter(r=>r.mold?.toLowerCase().includes(fmold));
+  if(ffrom) data=data.filter(r=>r.date>=ffrom);
+  if(fto) data=data.filter(r=>r.date<=fto);
+  if(!data.length){tbody.innerHTML='<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--dim)">لا توجد سجلات</td></tr>';return;}
+  tbody.innerHTML=data.map((r,idx)=>`<tr>
+    <td style="color:var(--dim)">${idx+1}</td>
+    <td class="ht-machine">${r.machineName||'M'+r.machine}</td>
+    <td class="ht-mold">${r.mold||'—'}</td>
+    <td><span style="display:inline-flex;align-items:center;gap:5px">
+      <span style="width:11px;height:11px;border-radius:50%;background:${r.colorHex||'#555'};display:inline-block;border:1px solid rgba(255,255,255,0.1)"></span>${r.color||'—'}
+    </span></td>
+    <td style="color:var(--accent)">${r.timeFrom||'—'}</td>
+    <td style="color:var(--orange)">${r.timeTo||'—'}</td>
+    <td>${r.timeFrom&&r.timeTo?(timeDiff(r.timeFrom,r.timeTo)||0).toFixed(2)+'h':'—'}</td>
+    <td style="color:var(--dim)">${r.diff?.toLocaleString('ar-DZ')||'—'}</td>
+    <td style="color:var(--purple)">${r.coeff||1}×</td>
+    <td class="ht-cnt">${r.pieces?.toLocaleString('ar-DZ')||'—'}</td>
+    <td style="color:var(--yellow)">${r.pph?.toLocaleString('ar-DZ')||'—'}</td>
+    <td style="color:var(--dim);font-size:11px">${r.date||''}</td>
+    <td><button onclick="delHist(${r.id})" class="del-btn">🗑</button></td>
+  </tr>`).join('');
+}
+
+function delHist(id){ prodHistory=prodHistory.filter(r=>r.id!==id); triggerAutoSave(); renderHistory(); }
+
+// ===== SUMMARY =====
+function renderSummary(){
+  const today=new Date().toISOString().split('T')[0];
+  const tr=prodHistory.filter(r=>r.date===today);
+  const tp=tr.reduce((s,r)=>s+(r.pieces||0),0);
+  const pr=tr.filter(r=>r.pph);
+  const avgP=pr.length?Math.round(pr.reduce((s,r)=>s+r.pph,0)/pr.length):0;
+  document.getElementById('statGrid').innerHTML=`
+    <div class="stat-card blue"><div class="stat-label">إجمالي القطع اليوم</div><div class="stat-val blue">${tp.toLocaleString('ar-DZ')}</div></div>
+    <div class="stat-card green"><div class="stat-label">الجلسات اليوم</div><div class="stat-val green">${tr.length}</div></div>
+    <div class="stat-card orange"><div class="stat-label">آلات نشطة</div><div class="stat-val orange">${new Set(tr.map(r=>r.machine)).size}</div></div>
+    <div class="stat-card yellow"><div class="stat-label">متوسط ق/ساعة</div><div class="stat-val yellow">${avgP.toLocaleString('ar-DZ')}</div></div>`;
+  const pm={};
+  for(let i=1;i<=6;i++){
+    const recs=tr.filter(r=>r.machine===i);
+    const mc={}; recs.forEach(r=>{if(r.mold) mc[r.mold]=(mc[r.mold]||0)+1;});
+    const top=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
+    const pp=recs.filter(r=>r.pph);
+    pm[i]={sessions:recs.length,pieces:recs.reduce((s,r)=>s+(r.pieces||0),0),
+      avgPPH:pp.length?Math.round(pp.reduce((s,r)=>s+r.pph,0)/pp.length):0,
+      topMold:top?.[0]||'—'};
+  }
+  document.getElementById('summaryTbody').innerHTML=Object.entries(pm).map(([mid,d])=>`
+    <tr>
+      <td class="ht-machine">آلة ${mid}</td><td>${d.sessions}</td>
+      <td style="color:var(--green)">${d.pieces.toLocaleString('ar-DZ')}</td>
+      <td style="color:var(--yellow)">${d.avgPPH.toLocaleString('ar-DZ')}</td>
+      <td class="ht-mold">${d.topMold}</td>
+    </tr>`).join('');
+}
+
+// ===== CSV =====
+function exportCSV(){
+  const h=['الآلة','القالب','اللون','من','إلى','المدة','CNT فرق','معامل','قطع','ق/ساعة','التاريخ'];
+  const rows=prodHistory.map(r=>[r.machineName||r.machine,r.mold,r.color,r.timeFrom,r.timeTo,
+    r.timeFrom&&r.timeTo?(timeDiff(r.timeFrom,r.timeTo)||0).toFixed(2):'',
+    r.diff,r.coeff,r.pieces,r.pph,r.date]);
+  const csv=[h,...rows].map(r=>r.map(v=>`"${v??''}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`prod_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ===== TOAST =====
+function toast(msg,type=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(type===true?' err':type==='warn'?' warn':'');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ===== INIT =====
+(()=>{
+  const saved=localStorage.getItem('anthropicKey')||'';
+  const inp=document.getElementById('apiKeyInput');
+  if(inp&&saved){inp.value=saved;saveApiKey(saved);}
+})();
+buildMachines();
+renderGoals();
+setTimeout(()=>{ const i=document.getElementById('asInd'); i.className='autosave-ind saved';
+  setTimeout(()=>{i.className='autosave-ind';},1500); },400);
+</script>
+</body>
+</html>
